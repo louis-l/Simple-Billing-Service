@@ -11,8 +11,10 @@
       laravelsail/php83-composer:latest \
       composer install --ignore-platform-reqs
    ```
-4. Run `./vendor/bin/sail artisan migrate`
-5. Run `./vendor/bin/sail db:seed`
+4. Run `./vendor/bin/sail up -d`
+5. Run `./vendor/bin/sail artisan migrate` (if asked to create `database.sqlite` file, select "Yes")
+6. Run `./vendor/bin/sail artisan db:seed`
+7. Run `./vendor/bin/sail artisan app:run` to start interacting with the CLI
 
 ---
 
