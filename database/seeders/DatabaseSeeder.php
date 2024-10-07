@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Product;
-use App\Models\Subscription;
 use App\Models\User;
+use App\Services\Billing\BillingManager;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -43,16 +43,12 @@ class DatabaseSeeder extends Seeder
             ->asYearlyPeriod()
             ->createOne();
 
-        $subscriptionForUser1 = Subscription::factory()
-            ->for($user1)
-            ->for($productMonthly)
-            ->state(['next_billing_at' => now()->addMonth()])
-            ->createOne();
+        resolve(BillingManager::class)
+            ->setUser($user1)
+            ->subscribeToProduct($productMonthly);
 
-        $subscriptionForUser2 = Subscription::factory()
-            ->for($user2)
-            ->for($productYearly)
-            ->state(['next_billing_at' => now()->addYear()])
-            ->createOne();
+        resolve(BillingManager::class)
+            ->setUser($user2)
+            ->subscribeToProduct($productYearly);
     }
 }

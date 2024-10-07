@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
@@ -29,8 +31,13 @@ class Subscription extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function isBillable(): bool
+    public function invoices(): HasMany
     {
-        return now()->greaterThan($this->next_billing_at);
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function isNextBillingDateDue(): Attribute
+    {
+        return Attribute::get(fn (): bool => now()->greaterThan($this->next_billing_at));
     }
 }
