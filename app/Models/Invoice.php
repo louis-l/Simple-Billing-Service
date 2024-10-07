@@ -11,6 +11,13 @@ class Invoice extends Model
     /** @use HasFactory<\Database\Factories\InvoiceFactory> */
     use HasFactory;
 
+    protected function casts(): array
+    {
+        return [
+            'is_paid' => 'boolean',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
