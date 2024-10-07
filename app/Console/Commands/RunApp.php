@@ -41,43 +41,17 @@ class RunApp extends Command
             $availableSelectOptions,
         );
 
+        // It is easier to check against the index then the text, so we will use this to determine which logic to run.
         $selectedOptionIndex = collect($availableSelectOptions)->search($selectedOption);
 
-        if ($selectedOptionIndex === 0) {
-            $this->printUsers();
-            return;
-        }
-
-        if ($selectedOptionIndex === 5) {
-            $this->checkPastDueSubscriptionsAndIssueInvoices();
-            return;
-        }
-
-        // From here will be handling option 1 -> 4
-        $user = User::factory()->createOne();
-
-        $product = match ($selectedOptionIndex) {
-            1, 3 => Product::query()->where('period', ProductPeriod::monthly)->firstOrFail(),
-            2, 4 => Product::query()->where('period', ProductPeriod::yearly)->firstOrFail(),
+        match ($selectedOptionIndex) {
+            0 => $this->printUsers(),
+            5 => $this->checkPastDueSubscriptionsAndIssueInvoices(),
+            1, 2, 3, 4 => $this->handleSubscription($selectedOptionIndex),
+            // Laravel is already handling invalid selection, so we dont need to worry about it here.
         };
 
-        $subscription = resolve(BillingManager::class)
-            ->setUser($user)
-            ->subscribeToProduct($product);
-
-        if (in_array($selectedOptionIndex, [3, 4], true)) {
-            $subscription->next_billing_at = now()->subDays(random_int(1, 30));
-            $subscription->saveQuietly();
-        }
-
-        $this->comment(
-            sprintf(
-                'Created user ID %d and subscription ID %d, with next billing date is %s',
-                $user->id,
-                $subscription->id,
-                $subscription->next_billing_at,
-            )
-        );
+        $this->info('Done');
     }
 
     protected function printUsers(): void
@@ -120,7 +94,33 @@ class RunApp extends Command
                     )
                 );
             });
+    }
 
-        $this->info('Done');
+    protected function handleSubscription(int $selectedOptionIndex): void
+    {
+        $user = User::factory()->createOne();
+
+        $product = match ($selectedOptionIndex) {
+            1, 3 => Product::query()->where('period', ProductPeriod::monthly)->firstOrFail(),
+            2, 4 => Product::query()->where('period', ProductPeriod::yearly)->firstOrFail(),
+        };
+
+        $subscription = resolve(BillingManager::class)
+            ->setUser($user)
+            ->subscribeToProduct($product);
+
+        if (in_array($selectedOptionIndex, [3, 4], true)) {
+            $subscription->next_billing_at = now()->subDays(random_int(1, 30));
+            $subscription->saveQuietly();
+        }
+
+        $this->comment(
+            sprintf(
+                'Created user ID %d and subscription ID %d, with next billing date is %s',
+                $user->id,
+                $subscription->id,
+                $subscription->next_billing_at,
+            )
+        );
     }
 }
