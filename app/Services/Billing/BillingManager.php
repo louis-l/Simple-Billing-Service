@@ -51,9 +51,15 @@ class BillingManager
         }
 
         $invoice = new Invoice();
+        $invoice->user()->associate($user);
         $invoice->subscription()->associate($subscription);
         $invoice->amount = $subscription->product->price;
         $invoice->save();
+
+        $subscription->next_billing_at = $subscription->product->is_billed_monthly
+            ? now()->addMonth()
+            : now()->addYear();
+        $subscription->save();
 
         return $invoice;
     }
